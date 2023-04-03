@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!-- templates/home.html -->
+<html>
+<head>
+    <link rel="stylesheet" href= {{url_for('static', filename ='style.css')}}/>
+    <title>Random Movie Info</title>
+</head>
+<body>
+    <div class="row">
+        <div class="column">
+          <h1><img src ="{{poster}}"></img></h1>
+          <h1>{{random_movie.title}}</h1>
+          <h2>{{random_movie.tagline}}</h2>
+          <h3>Genres: {{movie_genres}}</h3>
+          <h4><a href="{{wiki_link}}">Wikipedia Page</a></h4>
+        </div>
+        <div class="column">
+            <h1> User Comments</h1>
+        </div>
+      </div>
+      
+</body>
+</html>

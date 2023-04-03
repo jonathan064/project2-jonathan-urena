@@ -1,4 +1,5 @@
 venv
+.env
 fly.toml
 .vscode
 __pycache__
