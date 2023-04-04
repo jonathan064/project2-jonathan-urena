@@ -1,5 +1,6 @@
 import os
 import flask
+from flask import request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import requests
 import random
@@ -15,11 +16,11 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 db = SQLAlchemy(app)
 
 
-class User(db.Model):
-    username = db.Column(db.String(80), primary_key=True)
+class Users(db.Model):
+    name = db.Column(db.String(80), primary_key=True)
 
     def __repr__(self) -> str:
-        return f"Person with username: {self.username} and email: {self.email}"
+        return f"Person with username: {self.name}"
 
 
 with app.app_context():
@@ -31,6 +32,26 @@ def login():
     return flask.render_template("login.html")
     # people = Person.query.all()
     # return repr(people)
+
+
+@app.route("/register", methods=["POST", "GET"])
+def register():
+    if request.method == "POST":
+        data = request.form["info"]
+        return redirect(url_for("register_user_to_db", username=data))
+    else:
+        return flask.render_template("register.html")
+    # people = Person.query.all()
+    # return repr(people)
+
+
+@app.route("/<username>")
+def register_user_to_db(username):
+    user_table = Users(name=username)
+    db.session.add(user_table)
+    db.session.commit()
+    # people = Person.query.all()
+    return redirect(url_for("login"))
 
 
 @app.route("/home")
