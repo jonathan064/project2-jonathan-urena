@@ -1,11 +1,19 @@
 import os
 import flask
-from flask import request, redirect, url_for
+from flask import request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 import requests
 import random
 from dotenv import load_dotenv, find_dotenv
 from os import getenv
+from flask_login import (
+    UserMixin,
+    login_user,
+    LoginManager,
+    login_required,
+    logout_user,
+    current_user,
+)
 import json
 
 load_dotenv(find_dotenv())
@@ -13,11 +21,13 @@ load_dotenv(find_dotenv())
 
 app = flask.Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+app.config["SECRET_KEY"] = "random string"
 db = SQLAlchemy(app)
 
 
-class Users(db.Model):
-    name = db.Column(db.String(80), primary_key=True)
+class Users(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
 
     def __repr__(self) -> str:
         return f"Person with username: {self.name}"
@@ -26,12 +36,33 @@ class Users(db.Model):
 with app.app_context():
     db.create_all()
 
+# Flask-login methods
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
-@app.route("/")
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
+
+
+@app.route("/", methods=["POST", "GET"])
 def login():
-    return flask.render_template("login.html")
-    # people = Person.query.all()
-    # return repr(people)
+    if request.method == "POST":
+        data = request.form["info"]
+        data = str(data)
+        if data != "favicon.ico":
+            user = Users.query.filter_by(name=data).first()
+            if user:
+                login_user(user)
+                return redirect(url_for("home"))
+            else:
+                flask.flash("Invalid User")
+
+        # login check
+    else:
+        return flask.render_template("login.html")
 
 
 @app.route("/register", methods=["POST", "GET"])
@@ -56,6 +87,7 @@ def register_user_to_db(username):
 
 
 @app.route("/home")
+@login_required
 def home():
     # converts retrieved info into a string to be displayed easier
     genres = ""
