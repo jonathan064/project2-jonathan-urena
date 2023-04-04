@@ -47,10 +47,11 @@ def register():
 
 @app.route("/<username>")
 def register_user_to_db(username):
-    user_table = Users(name=username)
-    db.session.add(user_table)
-    db.session.commit()
-    # people = Person.query.all()
+    if username != "favicon.ico":  # prevents from being added to db over and over
+        user_table = Users(name=username)
+        db.session.add(user_table)
+        db.session.commit()
+        # people = Person.query.all()
     return redirect(url_for("login"))
 
 
