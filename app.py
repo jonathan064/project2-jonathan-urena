@@ -105,7 +105,7 @@ def register_user_to_db(username):
     return redirect(url_for("login"))
 
 
-@app.route("/home/<user>")
+@app.route("/home/<user>", methods=["POST", "GET"])
 @login_required
 def home(user):
     # converts retrieved info into a string to be displayed easier
@@ -128,7 +128,7 @@ def home(user):
         else:
             genres += (str(movies_list["genres"][i]["name"])) + ", "
     movie = movies_list
-    # user = login_manager.user_loader
+    # if request.method == "POST":
     return flask.render_template(
         "home.html",
         user=user,
