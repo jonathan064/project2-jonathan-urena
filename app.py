@@ -34,6 +34,17 @@ class Users(db.Model, UserMixin):
         return f"Person with username: {self.name}"
 
 
+class Comments(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    movie_id = rating = db.Column(db.Integer, unique=True, nullable=False)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+    rating = db.Column(db.Integer, unique=False, nullable=False)
+    message = db.Column(db.String(80), unique=False, nullable=False)
+
+    def __repr__(self) -> str:
+        return f"Person with username: {self.name}"
+
+
 with app.app_context():
     db.create_all()
 
@@ -57,7 +68,8 @@ def login():
             user = Users.query.filter_by(name=data).first()
             if user:
                 login_user(user)
-                return redirect(url_for("home"))
+                user = str(user.name)
+                return redirect(url_for("home", user=user))
             else:
                 return flask.render_template("wrong_login.html")
 
@@ -93,18 +105,20 @@ def register_user_to_db(username):
     return redirect(url_for("login"))
 
 
-@app.route("/home")
+@app.route("/home/<user>")
 @login_required
-def home():
+def home(user):
     # converts retrieved info into a string to be displayed easier
     genres = ""
+    movie_id = ""
     movie_selection = random.randint(1, 9)
     if movie_selection <= 3:
-        movies_list = get_movies_by__id("283566")
+        movie_id = "283566"
     elif movie_selection > 3 and movie_selection < 7:
-        movies_list = get_movies_by__id("372058")
+        movie_id = "372058"
     else:
-        movies_list = get_movies_by__id("533514")
+        movie_id = "533514"
+    movies_list = get_movies_by__id(movie_id)
     poster_image = get_poster_image(movies_list["poster_path"])
     link = str(movies_list["title"])
     link = get_wiki_link(link)
@@ -117,7 +131,7 @@ def home():
     # user = login_manager.user_loader
     return flask.render_template(
         "home.html",
-        # user=user,
+        user=user,
         random_movie=movie,
         movie_genres=genres,
         poster=poster_image,
