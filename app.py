@@ -30,19 +30,13 @@ class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
 
-    def __repr__(self) -> str:
-        return f"Person with username: {self.name}"
-
 
 class Comments(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    movie_id = rating = db.Column(db.Integer, unique=True, nullable=False)
-    name = db.Column(db.String(80), unique=True, nullable=False)
+    movie_id = rating = db.Column(db.Integer, unique=False, nullable=False)
+    name = db.Column(db.String(80), unique=False, nullable=False)
     rating = db.Column(db.Integer, unique=False, nullable=False)
     message = db.Column(db.String(80), unique=False, nullable=False)
-
-    def __repr__(self) -> str:
-        return f"Person with username: {self.name}"
 
 
 with app.app_context():
@@ -91,8 +85,6 @@ def register():
         return redirect(url_for("register_user_to_db", username=data))
     else:
         return flask.render_template("register.html")
-    # people = Person.query.all()
-    # return repr(people)
 
 
 @app.route("/<username>")
@@ -101,7 +93,6 @@ def register_user_to_db(username):
         user_table = Users(name=username)
         db.session.add(user_table)
         db.session.commit()
-        # people = Person.query.all()
     return redirect(url_for("login"))
 
 
@@ -128,15 +119,26 @@ def home(user):
         else:
             genres += (str(movies_list["genres"][i]["name"])) + ", "
     movie = movies_list
-    # if request.method == "POST":
-    return flask.render_template(
-        "home.html",
-        user=user,
-        random_movie=movie,
-        movie_genres=genres,
-        poster=poster_image,
-        wiki_link=link,
-    )
+    if request.method == "POST":
+        get_rating = request.form["rating"]
+        get_message = request.form["message"]
+        get_id = request.form["id"]
+        comment_table = Comments(
+            movie_id=get_id, rating=get_rating, name=user, message=get_message
+        )
+        db.session.add(comment_table)
+        db.session.commit()
+        return redirect(url_for("home", user=user))
+    else:
+        comments = Comments.query.filter_by(movie_id=movie_id).all()
+        return flask.render_template(
+            "home.html",
+            comments=comments,
+            random_movie=movie,
+            movie_genres=genres,
+            poster=poster_image,
+            wiki_link=link,
+        )
 
 
 # Uses id to acces IMDB database to retrieve stats
